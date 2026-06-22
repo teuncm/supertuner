@@ -1,3 +1,3 @@
 # Supertuner
 
-The better mobile-friendly tuning tool.
+The best mobile-friendly tuning tool found [here](http://teuncm.nl/supertuner).
