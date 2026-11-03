@@ -6,17 +6,21 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "npm run test:unit && playwright test",
+    "test:unit": "node --test tests/unit/*.test.js",
+    "bench:latency": "playwright test tests/latency.spec.js --workers=1"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.1",
     "@teuncm/n-et": "^0.0.13",
     "pitchy": "^4.1.0",
     "tailwindcss": "^4.3.1",
-    "vue": "^3.5.34"
+    "vue": "3.6.0-rc.14"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.6",
-    "vite": "^8.0.12"
+    "@playwright/test": "^1.64.1",
+    "@vitejs/plugin-vue": "6.0.10",
+    "vite": "^8.3.5"
   }
 }

@@ -3,6 +3,8 @@ const audioConstraints = {
     autoGainControl: false,
     echoCancellation: false,
     noiseSuppression: false,
+    channelCount: { ideal: 1 },
+    latency: { ideal: 0 },
   },
   video: false,
 }
@@ -15,62 +17,38 @@ export async function requestMicrophone() {
   return navigator.mediaDevices.getUserMedia(audioConstraints)
 }
 
-export async function createAudioGraph(stream, fftSize) {
+export async function createAudioGraph(stream) {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext
-  const audioContext = new AudioContextClass()
-  const analyser = audioContext.createAnalyser()
+  const audioContext = new AudioContextClass({ latencyHint: 'interactive' })
   const gain = audioContext.createGain()
-  const levelAnalyser = audioContext.createAnalyser()
-  const limiter = audioContext.createDynamicsCompressor()
+  const highpass = audioContext.createBiquadFilter()
+  highpass.type = 'highpass'
+  highpass.frequency.value = 20
+  highpass.Q.value = 0
   const source = audioContext.createMediaStreamSource(stream)
 
-  gain.gain.value = 1
-  limiter.threshold.value = -1
-  limiter.knee.value = 0
-  limiter.ratio.value = 20
-  limiter.attack.value = 0.003
-  limiter.release.value = 0.08
-  analyser.fftSize = fftSize
-  analyser.smoothingTimeConstant = 0
-  levelAnalyser.fftSize = fftSize
-  levelAnalyser.smoothingTimeConstant = 0
-  source.connect(gain)
-  gain.connect(levelAnalyser)
-  gain.connect(limiter)
-  limiter.connect(analyser)
+  source.connect(highpass)
+  highpass.connect(gain)
 
   if (audioContext.state === 'suspended') {
-    await audioContext.resume()
+    try { await audioContext.resume() }
+    catch (error) { source.disconnect(); highpass.disconnect(); gain.disconnect(); await audioContext.close(); throw error }
   }
 
   return {
-    analyser,
     audioContext,
-    buffer: new Float32Array(analyser.fftSize),
     gain,
-    levelBuffer: new Float32Array(levelAnalyser.fftSize),
-    levelAnalyser,
-    limiter,
+    highpass,
     source,
   }
-}
-
-export function setAudioGraphGain(audioGraph, gainValue) {
-  if (!audioGraph) return
-
-  audioGraph.gain.gain.setTargetAtTime(
-    gainValue,
-    audioGraph.audioContext.currentTime,
-    0.01,
-  )
 }
 
 export function closeAudioGraph(audioGraph) {
   if (!audioGraph) return
 
   audioGraph.source.disconnect()
+  audioGraph.highpass.disconnect()
   audioGraph.gain.disconnect()
-  audioGraph.levelAnalyser.disconnect()
-  audioGraph.limiter.disconnect()
-  audioGraph.audioContext.close()
+  audioGraph.analyser?.disconnect()
+  void audioGraph.audioContext.close().catch(() => {})
 }
