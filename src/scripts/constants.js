@@ -5,8 +5,8 @@ export const FFT_SIZE = 4096
 export function getPitchWindowSize(sampleRate) {
   return FFT_SIZE * 2 ** Math.max(0, Math.ceil(Math.log2(sampleRate / 48000)))
 }
-export const IN_TUNE_CENTS = 4
+export const IN_TUNE_CENTS = 5
 export const MAX_CENTS = 50
-export const MAX_TARGET_ACCURACY_CENTS = 25
+export const MAX_TARGET_ACCURACY_CENTS = 15
 export const MIN_CLARITY = 0.9
 export const MIN_VOLUME_DB = -55
